@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 import numpy as np
+
 plt.figure()
 
 x = 0
