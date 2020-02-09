@@ -7,13 +7,18 @@ from matplotlib.patches import Ellipse
 
 plt.figure()
 plt.xlim((-50,50))
-plt.ylim((-20,20))
+plt.ylim((-50,50))
+plt.xlabel("Position")
+plt.ylabel("Velocity")
 sigma = 1
 x = 0
 dx = 0
 ddx = 0
 u = 1 #control vector
-runlen = 20
+runlen = 4
+
+R = (sigma**2)*np.array([[0.5],[1]])*np.array([0.5,1]) #not sure if right
+print(R)
 
 #position and velocity
 X = np.array([[x],[dx]])
@@ -26,20 +31,18 @@ while t < runlen:
 	ddx = np.random.randn()
 	B = np.array([[0.5*ddx],[1*ddx]])
 
-	#noise covariance matrix
-	R = (sigma**2)*np.array([[0.5],[1]])*np.array([0.5,1]) #not sure if right
-	#print(R)
-
 	#epsilon = N([[0],[0]],R)
 	#eps = np.random.randn(2,1)*R
 	#print(eps)
 
-	#Enviornmental uncertainty
-	Q = 5
+	#Enviornmental uncertainty (add in with each step)
+	#95th percentile = 2 standard deviations
+	Q = 2
 
 	Xprev = X	
 	#uncertainty 
 	R = A*R*A.transpose() + Q
+	print(R)
 
 	#draw boat position
 	boatpos, = plt.plot(X[0],X[1],'ro')
@@ -47,11 +50,11 @@ while t < runlen:
 	X = A.dot(X) + B.dot(u) #+ eps
 
 	#draw elipse of uncertainty for next boat position
-	#t_rot = np.arctan(2/1) #rotation angle
-	t_rot = float(np.arctan((Xprev[1]-X[1])/(Xprev[0]-X[0])))
+	#rotation angle based on covariance matrix
+	t_rot = float(np.arctan(R[0,1]/R[1,0]))
 	n = np.linspace(0, 2*np.pi, 100)
 
-	Ell = np.array([R[1,0]*np.cos(n) , R[0,1]*np.sin(n)])
+	Ell = np.array([R[1,1]*np.cos(n) , 0.5*R[0,0]*np.sin(n)])
 	#rotation matrix
 	R_rot = np.array([[np.cos(t_rot) , -np.sin(t_rot)],[np.sin(t_rot) , np.cos(t_rot)]])
 	
@@ -59,9 +62,14 @@ while t < runlen:
 	for i in range(Ell.shape[1]):
 		Ell_rot[:,i] = np.dot(R_rot,Ell[:,i])
 
-	elipseRot, = plt.plot( X[0]+Ell_rot[0,:] , X[1]+Ell_rot[1,:],'b' )
+	#plot rotated elipse (centered around (0,0))
+	try: 
+		elipseRot.remove()
+	except:
+		pass
+	elipseRot, = plt.plot( 0+Ell_rot[0,:] , 0+Ell_rot[1,:],'b' )
 	#plt.show()
-	plt.pause(0.125)
+	plt.pause(0.0025)
 	plt.draw()
-	elipseRot.remove()
 	t += 1
+plt.pause(2)
