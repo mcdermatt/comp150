@@ -28,6 +28,7 @@ lastT = 0
 oldVariance = 15
 oldMean = 0
 z = 0
+m = np.pi/4
 
 R = (sigma**2)*np.array([[0.5],[1]])*np.array([0.5,1]) #not sure if right
 print(R)
@@ -68,7 +69,7 @@ while t < runlen:
 
 			#plot new elipse representing CI accounting for gps
 			#rotation angle based on covariance matrix
-			t_rotGPS = float(np.arctan(R[0,1]/R[1,0]))
+			t_rotGPS = m + np.pi
 			n = np.linspace(0, 2*np.pi, 100)
 
 			EllGPS = np.array([10*variance*np.cos(n) , 10*variance/2*np.sin(n)])
@@ -108,12 +109,10 @@ while t < runlen:
 			#loadedArray = loadedArray[~mask]
 
 			#calculate slope of best fit line
-			numerator = np.mean(loadedArray[:,0])*np.mean(loadedArray[:,1]) - np.mean(loadedArray[:,0])*np.mean(loadedArray[:,1])
-			print(numerator)
-			denomenator = (np.mean(loadedArray[:,0])*np.mean(loadedArray[:,0]) - (np.mean(loadedArray[:,0])**2))#(np.mean(loadedArray[0],axis=0))))
-			print(denomenator)
+			numerator = np.mean(loadedArray[:,0])*np.mean(loadedArray[:,1]) - np.mean(loadedArray[:,0]*loadedArray[:,1])
+			denomenator = (np.mean(loadedArray[:,0])*np.mean(loadedArray[:,0]) - (np.mean(loadedArray[:,0]**2)))#(np.mean(loadedArray[0],axis=0))))
 			m = numerator/denomenator
-			#print(m)
+			print(m)
 
 #			pos = loadedArray[:,1]
 #			print(pos)
