@@ -4,10 +4,7 @@ from matplotlib import pyplot as plt
 
 #number of initial particles in each direction
 fidelity = 10
-
-#import image taken from drone camera
-
-#get negative of drone camera image
+droneFOV = 300 #length of sides of square image taken by drone camera
 
 #Main Map
 plt.figure()
@@ -26,17 +23,36 @@ for i in x:
 		particlePosArr[:,particleCount] = [particleCount,i,j]
 		plt.plot(i,j,'ro')
 		particleCount += 1
+print(particlePosArr)
+
+
+#get random initial position for drone
+dronex = int(np.floor(np.random.rand()*img.shape[0]))
+droney = int(np.floor(np.random.rand()*img.shape[1]))
+#plot image taken by drone camera
+plt.figure()
+dronePic = img[dronex:dronex+droneFOV,droney:droney+droneFOV]
+#get negative of drone camera image
+#dronePic = cv2.bitwise_not(dronePic)
+
+
+plt.imshow(dronePic,cmap = 'gray', interpolation = 'bicubic')
+
 
 #Cropped Map
 plt.figure()
 #loop through particle positions drawing cropped map in figure 2
-for k in particlePosArr[1]:
-	imgCropped = img[100:150,300:350]
+for k in particlePosArr[0]:
+	imgCropped = img[int(particlePosArr[1,int(k)-1]):int(particlePosArr[1,int(k)-1]+droneFOV),int(particlePosArr[2,int(k)-1]):int(particlePosArr[2,int(k)-1]+droneFOV)]
 	plt.imshow(imgCropped, cmap = 'gray', interpolation = 'bicubic')
 
 	#compare cropped image to inverse drone image (find difference)
 
 	#record closest matching particle numbers
+
+	plt.draw()
+	plt.pause(0.05)
+	plt.clf()
 
 #generate new particles
 
