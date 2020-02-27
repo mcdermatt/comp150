@@ -3,8 +3,8 @@ import cv2
 from matplotlib import pyplot as plt
 
 #number of initial particles in each direction
-fidelity = 10
-droneFOV = 300 #length of sides of square image taken by drone camera
+fidelity = 25
+droneFOV = 500 #length of sides of square image taken by drone camera
 
 #Main Map
 plt.figure()
@@ -21,14 +21,13 @@ particleCount = 0
 for i in x:
 	for j in y:
 		particlePosArr[:,particleCount] = [particleCount,i,j]
-		plt.plot(i,j,'ro')
+		plt.plot(i,j,'r.')
 		particleCount += 1
-print(particlePosArr)
-
 
 #get random initial position for drone
-dronex = int(np.floor(np.random.rand()*img.shape[0]))
-droney = int(np.floor(np.random.rand()*img.shape[1]))
+dronex = int(np.floor(np.random.rand()*img.shape[0])) # - droneFOV
+droney = int(np.floor(np.random.rand()*img.shape[1])) # - droneFOV
+print("Actual Coords of Drone: ",dronex, " ", droney)
 #plot image taken by drone camera
 plt.figure()
 dronePic = img[dronex:dronex+droneFOV,droney:droney+droneFOV]
@@ -42,6 +41,10 @@ plt.imshow(dronePic,cmap = 'gray', interpolation = 'bicubic')
 #Cropped Map
 plt.figure()
 #loop through particle positions drawing cropped map in figure 2
+fitness = np.zeros([fidelity**2])
+bestFit = 10e7
+bestPt = 0
+
 for k in particlePosArr[0]:
 	imgCropped = img[int(particlePosArr[1,int(k)-1]):int(particlePosArr[1,int(k)-1]+droneFOV),int(particlePosArr[2,int(k)-1]):int(particlePosArr[2,int(k)-1]+droneFOV)]
 	plt.imshow(imgCropped, cmap = 'gray', interpolation = 'bicubic')
@@ -49,10 +52,26 @@ for k in particlePosArr[0]:
 	#compare cropped image to inverse drone image (find difference)
 
 	#record closest matching particle numbers
-
 	plt.draw()
 	plt.pause(0.05)
 	plt.clf()
+	if (imgCropped.shape == dronePic.shape):
+		overlap = np.sum(np.subtract(imgCropped, dronePic))
+		fitness[int(k)-1] = overlap
+	else:
+		#set arbitrarily low value for now
+		fitness[int(k)-1] = 10e7
+
+	if fitness[int(k)-1] < bestFit:
+		bestFit = fitness[int(k)-1]
+		bestPt = int(k)
+		print("Best Match is ", int(k))
+
+
+
+print(fitness)
+
+print("most likely coords of drone: ", particlePosArr[:,bestPt])
 
 #generate new particles
 
