@@ -3,10 +3,10 @@ import cv2
 from matplotlib import pyplot as plt
 
 #number of initial particles in each direction
-fidelity = 20
+fidelity = 30
 droneFOV = 70 #length of sides of square image taken by drone camera
-particleNoise = 5
-movementNoise = 15
+particleNoise = 10
+movementNoise = 10
 speed = 15
 runtime = 30
 
@@ -152,8 +152,8 @@ while runNum <= runtime:
 	dronex = dronex + dx
 	droney = droney + dy
 	#update pos array
-	particlePosArr[1,:] = particlePosArr[1,:] + dx + movementNoise
-	particlePosArr[2,:] = particlePosArr[2,:] + dy + movementNoise
+	particlePosArr[1,:] = particlePosArr[1,:] + dx + movementNoise*np.random.randn()
+	particlePosArr[2,:] = particlePosArr[2,:] + dy + movementNoise*np.random.randn()
 	z, = plt.plot(particlePosArr[1,:],particlePosArr[2,:],'g.')
 	plt.draw()
 	plt.pause(0.05)
