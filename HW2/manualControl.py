@@ -4,18 +4,24 @@ from matplotlib import pyplot as plt
 
 #number of initial particles in each direction
 fidelity = 30
-droneFOV = 70 #length of sides of square image taken by drone camera
-particleNoise = 10
-movementNoise = 10
-speed = 15
-runtime = 30
+droneFOV = 10 #length of sides of square image taken by drone camera
+particleNoise = 1.5
+movementNoise = 0
+speed = 1
+runtime = 200
+
+#theta = 2*np.pi*np.random.rand()
+theta = np.pi/2
 
 #Main Map
 plt.figure(0)
-img = cv2.imread('MarioMap.png',0) #load in image
+img = cv2.imread('BayMap.png',0) #load in image 0 = grayscale?
+
+#threshold image
+#retval, img = cv2.threshold(img,100,255, cv2.THRESH_BINARY)
 
 #reduce image size
-scale_percent = 25 # percent of original size
+scale_percent = 10 # percent of original size
 width = int(img.shape[1] * scale_percent / 100)
 height = int(img.shape[0] * scale_percent / 100)
 dim = (width, height)
@@ -42,17 +48,20 @@ dronex = int(np.floor(np.random.rand()*(img.shape[0] - droneFOV)))
 droney = int(np.floor(np.random.rand()*(img.shape[1] - droneFOV)))
 print("Actual Coords of Drone: ",dronex, " ", droney)
 
+dronex = 50
+droney = 5
+
 runNum = 1
 while runNum <= runtime:
 	#plot image taken by drone camera
-	plt.figure(1)
-	plt.clf()
+	#plt.figure(1)
+	#plt.clf()
 	dronePic = img[int(dronex):int(dronex+droneFOV),int(droney):int(droney+droneFOV)]
 	#get negative of drone camera image
 	#dronePic = cv2.bitwise_not(dronePic)
-	plt.imshow(dronePic,cmap = 'gray', interpolation = 'bicubic')
-	plt.pause(0.05)
-	plt.draw()
+	#plt.imshow(dronePic,cmap = 'gray', interpolation = 'bicubic')
+	#plt.pause(0.01)
+	#plt.draw()
 
 	#loop through particle positions drawing cropped map in figure 2
 	worstFit = 255*(fidelity**2)
@@ -108,8 +117,8 @@ while runNum <= runtime:
 		while p < fitness.shape[0]:
 			if cumFitness[p] > r:
 				#update particlePosArray with value closes to randomly chosen point + noise
-				particlePosArr[1,n] = particlePosArr[1,p] + np.floor(particleNoise*np.random.randn())
-				particlePosArr[2,n] = particlePosArr[2,p] + np.floor(particleNoise*np.random.randn())
+				particlePosArr[1,n] = particlePosArr[1,p] + int(particleNoise*np.random.randn())
+				particlePosArr[2,n] = particlePosArr[2,p] + int(particleNoise*np.random.randn())
 				break
 			p += 1
 		n += 1
@@ -133,19 +142,20 @@ while runNum <= runtime:
 	#plt.pause(0.05)
 	#plt.draw()
 
-	print("most likely coords of drone: ", particlePosArr[:,bestPt])
+	#print("Best Estimated Coords of Drone: ", particlePosArr[:,bestPt])
+	#print("Actual Coords of Drone: ",dronex, " ", droney)
 	#draw most likely estimated location on main map
 	#plt.plot(particlePosArr[2,bestPt],particlePosArr[1,bestPt],'go')
 	#plt.pause(0.5)
 	#plt.draw()
 
 	#movement
-	theta = 2*np.pi*np.random.rand()
+	theta = theta + 0.1*np.random.randn()
 	#print("theta = ", theta)
 	dx = speed*np.cos(theta)
 	dy = speed*np.sin(theta)
 	#don't go outside the map
-	if (dronex + dx > img.shape[0] - droneFOV) or (droney + dy > img.shape[0] - droneFOV):
+	if (dronex + dx > img.shape[0] - droneFOV) or (droney + dy > img.shape[0] - droneFOV) or (dronex < 0) or (droney < 0) :
 		dx = 0
 		dy = 0
 	#update drone position
@@ -154,10 +164,12 @@ while runNum <= runtime:
 	#update pos array
 	particlePosArr[1,:] = particlePosArr[1,:] + dx + movementNoise*np.random.randn()
 	particlePosArr[2,:] = particlePosArr[2,:] + dy + movementNoise*np.random.randn()
-	z, = plt.plot(particlePosArr[1,:],particlePosArr[2,:],'g.')
+	z, = plt.plot(particlePosArr[2,:],particlePosArr[1,:],'g.')
+	dronePoint, = plt.plot(droney, dronex, 'rx')
 	plt.draw()
-	plt.pause(0.05)
+	plt.pause(0.01)
 	z.remove()
+	dronePoint.remove()
 	runNum += 1
 
 plt.show()
