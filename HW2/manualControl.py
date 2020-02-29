@@ -3,19 +3,23 @@ import cv2
 from matplotlib import pyplot as plt
 
 #number of initial particles in each direction
-fidelity = 30
+fidelity = 15
 droneFOV = 10 #length of sides of square image taken by drone camera
-particleNoise = 1.5
+particleNoise = 3
 movementNoise = 0
 speed = 1
 runtime = 200
+fitnessThreshold = 1.1
 
 #theta = 2*np.pi*np.random.rand()
 theta = np.pi/2
 
 #Main Map
 plt.figure(0)
-img = cv2.imread('BayMap.png',0) #load in image 0 = grayscale?
+img = cv2.imread('CityMap.png') #load in image 0 = grayscale
+# kernel = np.ones((5,5),np.float32)/15
+# img = cv2.filter2D(img,-1,kernel)
+
 
 #threshold image
 #retval, img = cv2.threshold(img,100,255, cv2.THRESH_BINARY)
@@ -48,8 +52,8 @@ dronex = int(np.floor(np.random.rand()*(img.shape[0] - droneFOV)))
 droney = int(np.floor(np.random.rand()*(img.shape[1] - droneFOV)))
 print("Actual Coords of Drone: ",dronex, " ", droney)
 
-dronex = 50
-droney = 5
+dronex = img.shape[0]/2
+droney = img.shape[1]/2
 
 runNum = 1
 while runNum <= runtime:
@@ -83,7 +87,7 @@ while runNum <= runtime:
 		if (imgCropped.shape == dronePic.shape):
 			#compare cropped image to inverse drone image (find difference)
 			overlap = np.sum(np.subtract(imgCropped, dronePic))
-			fitness[int(k)-1] = worstFit - overlap
+			fitness[int(k)-1] = (worstFit - overlap)**(fitnessThreshold)
 		else:
 			#set arbitrarily low value - if you set to zero point will never be looked at again
 			fitness[int(k)-1] = 0
@@ -132,8 +136,8 @@ while runNum <= runtime:
 	plt.clf()
 	plt.imshow(img, cmap = 'gray', interpolation = 'bicubic')
 	plt.xticks([]), plt.yticks([])  # to hide tick values on X and Y axis
-	# plt.xlim((img.shape[1],0))
-	# plt.ylim((img.shape[0],0))
+	# plt.xlim((0,img.shape[1]))
+	# plt.ylim((0,img.shape[0]))
 	# u = 0
 	# while u < particlePosArr.shape[1]:
 	# 	plt.plot(particlePosArr[2,u],particlePosArr[1,u],'b.')
@@ -155,9 +159,10 @@ while runNum <= runtime:
 	dx = speed*np.cos(theta)
 	dy = speed*np.sin(theta)
 	#don't go outside the map
-	if (dronex + dx > img.shape[0] - droneFOV) or (droney + dy > img.shape[0] - droneFOV) or (dronex < 0) or (droney < 0) :
+	if (dronex + dx > img.shape[1] - droneFOV) or (droney + dy > img.shape[0] - droneFOV) or (dronex < 0) or (droney < 0) :
 		dx = 0
 		dy = 0
+		theta = theta + np.pi
 	#update drone position
 	dronex = dronex + dx
 	droney = droney + dy
