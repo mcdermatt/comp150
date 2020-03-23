@@ -23,7 +23,7 @@ class kalman:
 		#self.lastEst = 0
 		#self.prevVar = 10
 		#self.u = u
-		self.Q = 0
+		self.Q = self.pnoise**2 * np.array([[0.25,0.5],[0.5, 1]])
 		self.R = 0
 		self.I = np.identity(dim+1)
 
@@ -34,10 +34,10 @@ class kalman:
 		"""prediction step of kalman filter"""
 
 		#predicted position for next step
-		priori = np.dot(self.A,(lastEst)) + self.B*u
+		priori = np.dot(self.A,(lastEst)) + self.B*u + self.pnoise*self.B*np.random.randn() #self.pnoise*np.array([[0.5*np.random.randn()],[np.random.randn()]])
 
 		#predicted variance for next step
-		predVar = self.A.dot(prevVar*self.A.transpose()) #_ self.Q ##2x2
+		predVar = self.A.dot(prevVar*self.A.transpose()) + self.Q
 
 		#prediction results
 		predRes = [priori,predVar]
@@ -46,18 +46,14 @@ class kalman:
 	def update(self, priori, predVar):
 		"""update step of kalman filter"""
 		#kalman gain 2x1 Matrix
-		K = self.A.dot(predVar).dot(self.C.transpose())/self.C.dot(predVar).dot(self.C.transpose())
-		print('K = ',K)
+		K = self.A.dot(predVar).dot(self.C.transpose())/(self.C.dot(predVar).dot(self.C.transpose()) + self.R)
 
 		#posterior estimate
-		y = np.array([1,0]).dot(priori)
-		print('y = ',y)
+		y = np.array([1,0]).dot(priori) + self.mnoise*np.random.randn()
 		post = priori + K*(y - self.C.dot(priori))
-		print('post = ',post)
 
 		#estimated current variance
 		curVar = (self.I - K*self.C)*predVar
-		print('curVar = ',curVar)
 
 		#results of update
 		updateRes = [post,curVar]
