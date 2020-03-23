@@ -7,7 +7,7 @@ class kalman:
 	"""creates kalman filter about specified params"""
 	A = np.array([[1,1],[0.5,1]])
 	B = np.array([[1],[0]])
-	C = np.array([1,0])
+	C = np.array([[1,0]])
 	u = np.array([[0,0]])
 
 	startPos = 0
@@ -37,8 +37,6 @@ class kalman:
 		priori = np.dot(self.A,(lastEst)) + self.B*u
 
 		#predicted variance for next step
-		# predVar	= self.A*prevVar*self.A.transpose() #+ self.Q
-		#predVar = self.A.dot(prevVar).dot(self.A.transpose())
 		predVar = self.A.dot(prevVar*self.A.transpose()) #_ self.Q ##2x2
 
 		#prediction results
@@ -47,22 +45,22 @@ class kalman:
 
 	def update(self, priori, predVar):
 		"""update step of kalman filter"""
-		#kalman gain(?)
-		#print(self.C.dot(predVar).dot(self.C.transpose())) #debug
-		#print(predVar.dot(self.C.transpose())) #this is resulting in a constant- 
-			#do I need to transpose predVar??
-		K = np.divide((predVar.dot(self.C.transpose())),(self.C.dot(predVar).dot(self.C.transpose()) ))#+self.R))
-		#print(K)
+		#kalman gain 2x1 Matrix
+		K = self.A.dot(predVar).dot(self.C.transpose())/self.C.dot(predVar).dot(self.C.transpose())
+		print('K = ',K)
 
 		#posterior estimate
-		y = np.array([1,0])*priori
-		post = priori + K*(y - self.C*priori)
-		
+		y = np.array([1,0]).dot(priori)
+		print('y = ',y)
+		post = priori + K*(y - self.C.dot(priori))
+		print('post = ',post)
+
 		#estimated current variance
 		curVar = (self.I - K*self.C)*predVar
+		print('curVar = ',curVar)
 
 		#results of update
-		updateRes = np.array([post,curVar])
+		updateRes = [post,curVar]
 		return(updateRes)
 
 	def display(self):
