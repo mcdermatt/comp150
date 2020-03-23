@@ -6,8 +6,8 @@ from matplotlib.patches import Ellipse
 #Part 2: assumes measurement
 
 plt.figure()
-plt.xlim((-100,100))
-plt.ylim((-20,20))
+# plt.xlim((-100,100))
+# plt.ylim((-20,20))
 plt.xlabel("Position")
 plt.ylabel("Velocity")
 sigma = 1
@@ -162,8 +162,8 @@ while t < runlen:
 
 	ddx = np.random.randn()
 	B = np.array([[0.5],[1]])
-	u = np.array([[ddx,ddx]])
-
+	# u = np.array([[ddx,ddx]])
+	u = np.array([[0,ddx]])
 	#print("ddx = ",ddx)
 
 	#epsilon = N([[0],[0]],R)
