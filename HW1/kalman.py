@@ -45,17 +45,20 @@ class kalman:
 		"""update step of kalman filter"""
 		#kalman gain 2x1 Matrix
 		K = self.A.dot(predVar).dot(self.C.transpose())/(self.C.dot(predVar).dot(self.C.transpose()) + self.R)
+		print('K = ', K)
 
 		#posterior estimate
 		yhat = self.C.dot(priori) + self.mnoise*np.random.randn()
 		post = priori + K*(yhat - self.C.dot(priori))
 
 		#estimated current variance
-		curVar = (self.I - K*self.C)*predVar
+		curVar = (self.I - K*self.C).dot(predVar)
 
 		#results of update
 		updateRes = [post,curVar]
 		return(updateRes)
+
+	#def get_ellipse(self,)
 
 	def display(self):
 		"""shows values on plot"""
