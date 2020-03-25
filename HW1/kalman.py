@@ -26,36 +26,46 @@ class kalman:
 		#self.Q = self.pnoise**2 * np.array([[0.25,0.5],[0.5, 1]])
 		self.pnoisecov = np.array([[0.25,0.5],[0.5,1]])
 		self.R = self.mnoise**2 #measurement noise covariance
-		self.I = np.identity(dim+1)
+		self.I = np.identity(dim*2)
 
-	def prediction(self, lastEst, prevVar, u):
+	def prediction(self, x, lastEst, prevVar, u):
 		"""prediction step of kalman filter"""
 
 		#predicted position for next step
-		priori = np.dot(self.A,(lastEst)) + self.B*u + self.pnoise*np.array([[0.5*np.random.randn()],[np.random.randn()]])
+		xhat = np.dot(self.A,(lastEst)) + self.B*u
+		
+		#actual position (includes process noise)
+		x = np.dot(self.A,(x)) + self.B*u + self.pnoise*np.array([[0.5*np.random.randn()],[np.random.randn()]])
+
+		#if measurement taken, set xhat to x + some measurement noise
+		# if measTaken == 1:
+		# 	xhat = x + self.mnoise*np.array([[np.random.randn()],[np.random.randn()/2]])
 
 		#predicted variance for next step
 		predVar = self.A.dot(prevVar*self.A.transpose()) + (self.pnoise**2)*self.pnoisecov
 
 		#prediction results
-		predRes = [priori,predVar]
+		predRes = [x,xhat,predVar]
 		return(predRes)
 
-	def update(self, priori, predVar):
+	def update(self, x, priori, predVar,measTaken):
 		"""update step of kalman filter"""
 		#kalman gain 2x1 Matrix
 		K = self.A.dot(predVar).dot(self.C.transpose())/(self.C.dot(predVar).dot(self.C.transpose()) + self.R)
 		print('K = ', K)
 
 		#posterior estimate
-		yhat = self.C.dot(priori) + self.mnoise*np.random.randn()
+		yhat = self.C.dot(priori) #+ self.mnoise*np.random.randn()
+		if measTaken == 1:
+			yhat = self.C.dot(x) + self.mnoise*np.random.randn()
+
 		post = priori + K*(yhat - self.C.dot(priori))
 
 		#estimated current variance
 		curVar = (self.I - K*self.C).dot(predVar)
 
 		#results of update
-		updateRes = [post,curVar]
+		updateRes = [post,curVar,yhat]
 		return(updateRes)
 
 	#def get_ellipse(self,)
