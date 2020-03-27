@@ -13,24 +13,28 @@ C = np.array([[1,0]])
 # process noise
 w = 1
 #measurement noise
-v = 10
+v = 3
 #v = np.array([[1e-4, 1e-5],[1e-4,1e-5]])
 
 kal = kalman(A,B,C,dim=1,w=w,v=v)
 
-u = 1 #input acceleration
+u = 0 #input acceleration
 post = np.array([[0],[0]])
 x = np.array([[0],[0]])
 curVar = np.array([[1,1],[1,1]])
+GPSPollFreq = 1
 
 count = 0
-while count < 50:
-	#randomly decide of gps should be checked
-	p = np.random.rand()
-	if p > 0.7:
+while count < 21:
+	if count%GPSPollFreq == 0:
 		measTaken = 1
 	else:
 		measTaken = 0
+	#simulate GPS randomly not working
+	p = np.random.rand()
+	if p > 0.9:
+		measTaken = 0
+
 	#run prediction step
 	predRes = kal.prediction(x, post, curVar, u)
 	x = predRes[0]
@@ -51,7 +55,7 @@ while count < 50:
 	#print('post = ', updateRes[0], '   curVar = ', updateRes[1])
 	post = updateRes[0]
 	#plot estimates as red dots
-	# plt.plot(post[0],post[1],'r.')
+	plt.plot(post[0],post[1],'r.')
 	if measTaken == 1:
 		GPS, = plt.plot(updateRes[2],post[1],'g.')
 	#plt.plot(post[0],post[1],'g.')
@@ -70,12 +74,12 @@ while count < 50:
 	a = V[:,n] #a = largest eigenvector
 	#print('a = ', a)
 	majorLen = 2*np.sqrt(lamx) #was 2*sqrt(s*lamx)
-	print('majorLen = ', majorLen)
+	#print('majorLen = ', majorLen)
 	minorLen = 2*np.sqrt(lamy)
-	print('minorLen = ', minorLen)
+	#print('minorLen = ', minorLen)
 
 	t_rotGPS = np.arctan(a[0]) + np.pi/2
-	print('t_rot = ',t_rotGPS)
+	#print('t_rot = ',t_rotGPS)
 	n = np.linspace(0, 2*np.pi, 100)
 	EllGPS = np.array([majorLen*np.cos(n) , minorLen*np.sin(n)])
 	#rotation matrix
@@ -92,9 +96,12 @@ while count < 50:
 		pass
 	elipseRotGPS, = plt.plot( post[0]+Ell_rotGPS[0,:] , post[1]+Ell_rotGPS[1,:],'b--' )
 
+	diff = np.abs(x[0]-xhat[0])
+	print("diff = ", diff)
+
 	count += 1
 	#print(count)
 	plt.draw()
 	plt.pause(0.1)
 	
-plt.pause(3)
+plt.pause(10)
